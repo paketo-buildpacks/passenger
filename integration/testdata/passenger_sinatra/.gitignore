@@ -1,0 +1,4 @@
+.bundle
+*.log
+*.pid
+passenger.*.lock
