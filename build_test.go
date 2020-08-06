@@ -1,6 +1,7 @@
 package passenger_test
 
 import (
+	"bytes"
 	"io/ioutil"
 	"os"
 	"testing"
@@ -35,7 +36,7 @@ func testBuild(t *testing.T, context spec.G, it spec.S) {
 		workingDir, err = ioutil.TempDir("", "working-dir")
 		Expect(err).NotTo(HaveOccurred())
 
-		build = passenger.Build(scribe.NewLogger(nil))
+		build = passenger.Build(scribe.NewLogger(bytes.NewBuffer(nil)))
 	})
 
 	it.After(func() {
@@ -64,7 +65,7 @@ func testBuild(t *testing.T, context spec.G, it spec.S) {
 			Processes: []packit.Process{
 				{
 					Type:    "web",
-					Command: "bundle exec passenger start",
+					Command: "bundle exec passenger start --port ${PORT:-3000}",
 				},
 			},
 		}))

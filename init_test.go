@@ -7,7 +7,7 @@ import (
 	"github.com/sclevine/spec/report"
 )
 
-func TestUnitBundleInstall(t *testing.T) {
+func TestUnitPassenger(t *testing.T) {
 	suite := spec.New("passenger", spec.Report(report.Terminal{}), spec.Parallel())
 	suite("Build", testBuild)
 	suite("Detect", testDetect)
