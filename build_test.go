@@ -2,13 +2,19 @@ package passenger_test
 
 import (
 	"bytes"
+	"errors"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 	"testing"
+	"time"
 
 	"github.com/paketo-buildpacks/packit"
+	"github.com/paketo-buildpacks/packit/chronos"
+	"github.com/paketo-buildpacks/packit/postal"
 	"github.com/paketo-buildpacks/packit/scribe"
 	"github.com/paketo-community/passenger"
+	"github.com/paketo-community/passenger/fakes"
 	"github.com/sclevine/spec"
 
 	. "github.com/onsi/gomega"
@@ -18,9 +24,10 @@ func testBuild(t *testing.T, context spec.G, it spec.S) {
 	var (
 		Expect = NewWithT(t).Expect
 
-		layersDir  string
-		workingDir string
-		cnbDir     string
+		layersDir         string
+		workingDir        string
+		cnbDir            string
+		dependencyManager *fakes.DependencyManager
 
 		build packit.BuildFunc
 	)
@@ -36,7 +43,14 @@ func testBuild(t *testing.T, context spec.G, it spec.S) {
 		workingDir, err = ioutil.TempDir("", "working-dir")
 		Expect(err).NotTo(HaveOccurred())
 
-		build = passenger.Build(scribe.NewLogger(bytes.NewBuffer(nil)))
+		dependencyManager = &fakes.DependencyManager{}
+		dependencyManager.ResolveCall.Returns.Dependency = postal.Dependency{ID: "curl"}
+
+		build = passenger.Build(
+			dependencyManager,
+			chronos.NewClock(time.Now),
+			scribe.NewLogger(bytes.NewBuffer(nil)),
+		)
 	})
 
 	it.After(func() {
@@ -68,8 +82,98 @@ func testBuild(t *testing.T, context spec.G, it spec.S) {
 					Command: "bundle exec passenger start --port ${PORT:-3000}",
 				},
 			},
+			Layers: []packit.Layer{
+				{
+					Name:      "curl",
+					Path:      filepath.Join(layersDir, "curl"),
+					SharedEnv: packit.Environment{},
+					BuildEnv:  packit.Environment{},
+					LaunchEnv: packit.Environment{},
+					Build:     false,
+					Launch:    true,
+					Cache:     false,
+				},
+			},
 		}))
 
+		Expect(dependencyManager.ResolveCall.Receives.Path).To(Equal(filepath.Join(cnbDir, "buildpack.toml")))
+		Expect(dependencyManager.ResolveCall.Receives.Id).To(Equal("curl"))
+		Expect(dependencyManager.ResolveCall.Receives.Version).To(Equal("*"))
+		Expect(dependencyManager.ResolveCall.Receives.Stack).To(Equal("some-stack"))
+
+		Expect(dependencyManager.InstallCall.Receives.Dependency).To(Equal(postal.Dependency{ID: "curl"}))
+		Expect(dependencyManager.InstallCall.Receives.CnbPath).To(Equal(cnbDir))
+		Expect(dependencyManager.InstallCall.Receives.LayerPath).To(Equal(filepath.Join(layersDir, "curl")))
 	})
 
+	context("failure cases", func() {
+		context("when the curl dependency cannot be resolved", func() {
+			it.Before(func() {
+				dependencyManager.ResolveCall.Returns.Error = errors.New("failed to resolve curl")
+			})
+
+			it("returns an error", func() {
+				_, err := build(packit.BuildContext{
+					WorkingDir: workingDir,
+					CNBPath:    cnbDir,
+					Stack:      "some-stack",
+					BuildpackInfo: packit.BuildpackInfo{
+						Name:    "Some Buildpack",
+						Version: "some-version",
+					},
+					Plan: packit.BuildpackPlan{
+						Entries: []packit.BuildpackPlanEntry{},
+					},
+					Layers: packit.Layers{Path: layersDir},
+				})
+				Expect(err).To(MatchError("failed to resolve curl"))
+			})
+		})
+
+		context("when the curl layer cannot be created", func() {
+			it.Before(func() {
+				Expect(ioutil.WriteFile(filepath.Join(layersDir, "curl.toml"), nil, 0000)).To(Succeed())
+			})
+
+			it("returns an error", func() {
+				_, err := build(packit.BuildContext{
+					WorkingDir: workingDir,
+					CNBPath:    cnbDir,
+					Stack:      "some-stack",
+					BuildpackInfo: packit.BuildpackInfo{
+						Name:    "Some Buildpack",
+						Version: "some-version",
+					},
+					Plan: packit.BuildpackPlan{
+						Entries: []packit.BuildpackPlanEntry{},
+					},
+					Layers: packit.Layers{Path: layersDir},
+				})
+				Expect(err).To(MatchError(ContainSubstring("permission denied")))
+			})
+		})
+
+		context("when the curl dependency cannot be installed", func() {
+			it.Before(func() {
+				dependencyManager.InstallCall.Returns.Error = errors.New("failed to install curl")
+			})
+
+			it("returns an error", func() {
+				_, err := build(packit.BuildContext{
+					WorkingDir: workingDir,
+					CNBPath:    cnbDir,
+					Stack:      "some-stack",
+					BuildpackInfo: packit.BuildpackInfo{
+						Name:    "Some Buildpack",
+						Version: "some-version",
+					},
+					Plan: packit.BuildpackPlan{
+						Entries: []packit.BuildpackPlanEntry{},
+					},
+					Layers: packit.Layers{Path: layersDir},
+				})
+				Expect(err).To(MatchError("failed to install curl"))
+			})
+		})
+	})
 }
