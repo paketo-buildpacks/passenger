@@ -4,12 +4,22 @@ api = "0.2"
   id = "paketo-community/passenger"
   name = "Passenger Buildpack"
 
+[metadata]
+  include_files = ["bin/build","bin/detect", "bin/run", "buildpack.toml"]
+  pre_package = "./scripts/build.sh"
+
+  [[metadata.dependencies]]
+    id = "curl"
+    name = "cURL"
+    sha256 = "cada8b936f0790014fda7c2a34ec0be15ea4ddbc8187365f9bcfa29a8c9e9a3f"
+    source = "https://curl.haxx.se/download/curl-7.71.1.tar.gz"
+    source_sha256 = "59ef1f73070de67b87032c72ee6037cedae71dcb1d7ef2d7f59487704aec069d"
+    stacks = ["io.buildpacks.stacks.bionic", "org.cloudfoundry.stacks.cflinuxfs3"]
+    uri = "https://buildpacks.cloudfoundry.org/dependencies/manual-binaries/curl/curl-7.71.1.tgz"
+    version = "7.71.1"
+
 [[stacks]]
   id = "org.cloudfoundry.stacks.cflinuxfs3"
 
 [[stacks]]
   id = "io.buildpacks.stacks.bionic"
-
-[metadata]
-  include_files = ["bin/build","bin/detect", "bin/run", "buildpack.toml"]
-  pre_package = "./scripts/build.sh"
