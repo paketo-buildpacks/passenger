@@ -85,8 +85,8 @@ func testSimpleApp(t *testing.T, context spec.G, it spec.S) {
 
 			Expect(logs).To(ContainLines(
 				"Passenger Buildpack 1.2.3",
-				"  Writing start command",
-				"    bundle exec passenger start --port ${PORT:-3000}",
+				"  Assigning launch processes",
+				"    web: bundle exec passenger start --port ${PORT:-3000}",
 			))
 		})
 	})
