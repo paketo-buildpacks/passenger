@@ -84,7 +84,7 @@ func testSimpleApp(t *testing.T, context spec.G, it spec.S) {
 			Expect(string(content)).To(ContainSubstring("Hello world!"))
 
 			Expect(logs).To(ContainLines(
-				"Passenger Buildpack 1.2.3",
+				"Paketo Passenger Buildpack 1.2.3",
 				"  Executing build process",
 				MatchRegexp(`    Installing cURL \d+\.\d+\.\d+`),
 				MatchRegexp(`      Completed in ([0-9]*(\.[0-9]*)?[a-z]+)+`),
