@@ -1,4 +1,4 @@
-module github.com/paketo-community/passenger
+module github.com/paketo-buildpacks/passenger
 
 go 1.14
 

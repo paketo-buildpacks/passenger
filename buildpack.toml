@@ -1,8 +1,9 @@
 api = "0.2"
 
 [buildpack]
-  id = "paketo-community/passenger"
+  id = "paketo-buildpacks/passenger"
   name = "Paketo Passenger Buildpack"
+  homepage = "https://github.com/paketo-buildpacks/passenger"
 
 [metadata]
   include_files = ["bin/build","bin/detect", "bin/run", "buildpack.toml"]

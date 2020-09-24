@@ -5,7 +5,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/paketo-community/passenger"
+	"github.com/paketo-buildpacks/passenger"
 	"github.com/sclevine/spec"
 
 	. "github.com/onsi/gomega"
