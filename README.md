@@ -1,6 +1,6 @@
 # Passenger Paketo Buildpack
 
-## `gcr.io/paketo-community/passenger`
+## `gcr.io/paketo-buildpacks/passenger`
 
 The Passenger CNB sets the start command for a given ruby application that runs on a Passenger server.
 

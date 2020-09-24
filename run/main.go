@@ -8,7 +8,7 @@ import (
 	"github.com/paketo-buildpacks/packit/chronos"
 	"github.com/paketo-buildpacks/packit/postal"
 	"github.com/paketo-buildpacks/packit/scribe"
-	"github.com/paketo-community/passenger"
+	"github.com/paketo-buildpacks/passenger"
 )
 
 func main() {
