@@ -47,10 +47,12 @@ func Build(dependencyManager DependencyManager, clock chronos.Clock, logger scri
 		logger.Break()
 
 		return packit.BuildResult{
-			Processes: []packit.Process{
-				{
-					Type:    "web",
-					Command: command,
+			Launch: packit.LaunchMetadata{
+				Processes: []packit.Process{
+					{
+						Type:    "web",
+						Command: command,
+					},
 				},
 			},
 			Layers: []packit.Layer{

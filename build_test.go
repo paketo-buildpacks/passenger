@@ -76,10 +76,12 @@ func testBuild(t *testing.T, context spec.G, it spec.S) {
 		Expect(err).NotTo(HaveOccurred())
 
 		Expect(result).To(Equal(packit.BuildResult{
-			Processes: []packit.Process{
-				{
-					Type:    "web",
-					Command: "bundle exec passenger start --port ${PORT:-3000}",
+			Launch: packit.LaunchMetadata{
+				Processes: []packit.Process{
+					{
+						Type:    "web",
+						Command: "bundle exec passenger start --port ${PORT:-3000}",
+					},
 				},
 			},
 			Layers: []packit.Layer{
