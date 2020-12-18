@@ -26,10 +26,11 @@ func Build(dependencyManager DependencyManager, clock chronos.Clock, logger scri
 			return packit.BuildResult{}, err
 		}
 
-		curlLayer, err := context.Layers.Get("curl", packit.LaunchLayer)
+		curlLayer, err := context.Layers.Get("curl")
 		if err != nil {
 			return packit.BuildResult{}, err
 		}
+		curlLayer.Launch = true
 
 		logger.Subprocess("Installing %s %s", dependency.Name, dependency.Version)
 		duration, err := clock.Measure(func() error {
