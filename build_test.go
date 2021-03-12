@@ -86,14 +86,15 @@ func testBuild(t *testing.T, context spec.G, it spec.S) {
 			},
 			Layers: []packit.Layer{
 				{
-					Name:      "curl",
-					Path:      filepath.Join(layersDir, "curl"),
-					SharedEnv: packit.Environment{},
-					BuildEnv:  packit.Environment{},
-					LaunchEnv: packit.Environment{},
-					Build:     false,
-					Launch:    true,
-					Cache:     false,
+					Name:             "curl",
+					Path:             filepath.Join(layersDir, "curl"),
+					SharedEnv:        packit.Environment{},
+					BuildEnv:         packit.Environment{},
+					LaunchEnv:        packit.Environment{},
+					ProcessLaunchEnv: map[string]packit.Environment{},
+					Build:            false,
+					Launch:           true,
+					Cache:            false,
 				},
 			},
 		}))
