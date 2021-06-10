@@ -1,12 +1,12 @@
 api = "0.2"
 
 [buildpack]
+  homepage = "https://github.com/paketo-buildpacks/passenger"
   id = "paketo-buildpacks/passenger"
   name = "Paketo Passenger Buildpack"
-  homepage = "https://github.com/paketo-buildpacks/passenger"
 
 [metadata]
-  include-files = ["bin/build","bin/detect", "bin/run", "buildpack.toml"]
+  include-files = ["bin/build", "bin/detect", "bin/run", "buildpack.toml"]
   pre-package = "./scripts/build.sh"
 
   [[metadata.dependencies]]
