@@ -19,6 +19,11 @@ api = "0.2"
     uri = "https://buildpacks.cloudfoundry.org/dependencies/manual-binaries/curl/curl-7.71.1.tgz"
     version = "7.71.1"
 
+  [[metadata.dependency-constraints]]
+      constraint = "7.*"
+      id = "curl"
+      patches = 1
+
 [[stacks]]
   id = "org.cloudfoundry.stacks.cflinuxfs3"
 
