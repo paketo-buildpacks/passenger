@@ -12,15 +12,17 @@ api = "0.2"
   [[metadata.dependencies]]
     id = "curl"
     name = "cURL"
-    sha256 = "cada8b936f0790014fda7c2a34ec0be15ea4ddbc8187365f9bcfa29a8c9e9a3f"
-    source = "https://curl.haxx.se/download/curl-7.71.1.tar.gz"
-    source_sha256 = "59ef1f73070de67b87032c72ee6037cedae71dcb1d7ef2d7f59487704aec069d"
-    stacks = ["io.buildpacks.stacks.bionic", "org.cloudfoundry.stacks.cflinuxfs3"]
-    uri = "https://buildpacks.cloudfoundry.org/dependencies/manual-binaries/curl/curl-7.71.1.tgz"
-    version = "7.71.1"
+    sha256 = "04947e24865df6fc8f86e5e68999f3ef2b36a9682e3e9641c7997c0b1f07e664"
+    source = "https://curl.se/download/curl-7.78.0.tar.gz"
+    source_sha256 = "ed936c0b02c06d42cf84b39dd12bb14b62d77c7c4e875ade022280df5dcc81d7"
+    stacks = ["io.buildpacks.stacks.bionic"]
+    uri = "https://deps.paketo.io/curl/curl_7.78.0_linux_noarch_bionic_04947e24.tgz"
+    version = "7.78.0"
 
-[[stacks]]
-  id = "org.cloudfoundry.stacks.cflinuxfs3"
+  [[metadata.dependency-constraints]]
+    constraint = "7.*"
+    id = "curl"
+    patches = 1
 
 [[stacks]]
   id = "io.buildpacks.stacks.bionic"
