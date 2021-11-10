@@ -3,7 +3,6 @@ package passenger_test
 import (
 	"bytes"
 	"errors"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
@@ -34,13 +33,13 @@ func testBuild(t *testing.T, context spec.G, it spec.S) {
 
 	it.Before(func() {
 		var err error
-		layersDir, err = ioutil.TempDir("", "layers")
+		layersDir, err = os.MkdirTemp("", "layers")
 		Expect(err).NotTo(HaveOccurred())
 
-		cnbDir, err = ioutil.TempDir("", "cnb")
+		cnbDir, err = os.MkdirTemp("", "cnb")
 		Expect(err).NotTo(HaveOccurred())
 
-		workingDir, err = ioutil.TempDir("", "working-dir")
+		workingDir, err = os.MkdirTemp("", "working-dir")
 		Expect(err).NotTo(HaveOccurred())
 
 		dependencyManager = &fakes.DependencyManager{}
@@ -81,6 +80,7 @@ func testBuild(t *testing.T, context spec.G, it spec.S) {
 					{
 						Type:    "web",
 						Command: "bundle exec passenger start --port ${PORT:-3000}",
+						Default: true,
 					},
 				},
 			},
@@ -135,7 +135,7 @@ func testBuild(t *testing.T, context spec.G, it spec.S) {
 
 		context("when the curl layer cannot be created", func() {
 			it.Before(func() {
-				Expect(ioutil.WriteFile(filepath.Join(layersDir, "curl.toml"), nil, 0000)).To(Succeed())
+				Expect(os.WriteFile(filepath.Join(layersDir, "curl.toml"), nil, 0000)).To(Succeed())
 			})
 
 			it("returns an error", func() {

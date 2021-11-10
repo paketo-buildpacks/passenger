@@ -48,16 +48,15 @@ func Build(dependencyManager DependencyManager, clock chronos.Clock, logger scri
 		logger.Break()
 
 		return packit.BuildResult{
+			Layers: []packit.Layer{curlLayer},
 			Launch: packit.LaunchMetadata{
 				Processes: []packit.Process{
 					{
 						Type:    "web",
 						Command: command,
+						Default: true,
 					},
 				},
-			},
-			Layers: []packit.Layer{
-				curlLayer,
 			},
 		}, nil
 	}
