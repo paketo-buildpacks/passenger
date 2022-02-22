@@ -1,7 +1,6 @@
 package passenger_test
 
 import (
-	"io/ioutil"
 	"os"
 	"testing"
 
@@ -20,7 +19,7 @@ func testGemfileParser(t *testing.T, context spec.G, it spec.S) {
 	)
 
 	it.Before(func() {
-		file, err := ioutil.TempFile("", "Gemfile")
+		file, err := os.CreateTemp("", "Gemfile")
 		Expect(err).NotTo(HaveOccurred())
 		defer file.Close()
 
@@ -39,7 +38,7 @@ func testGemfileParser(t *testing.T, context spec.G, it spec.S) {
 				const GEMFILE_CONTENTS = `source 'https://rubygems.org'
 gem 'passenger'`
 
-				Expect(ioutil.WriteFile(path, []byte(GEMFILE_CONTENTS), 0644)).To(Succeed())
+				Expect(os.WriteFile(path, []byte(GEMFILE_CONTENTS), 0644)).To(Succeed())
 
 				hasPassenger, err := parser.Parse(path)
 				Expect(err).NotTo(HaveOccurred())
@@ -51,7 +50,7 @@ gem 'passenger'`
 			it("parses correctly", func() {
 				const GEMFILE_CONTENTS = `source 'https://rubygems.org'`
 
-				Expect(ioutil.WriteFile(path, []byte(GEMFILE_CONTENTS), 0644)).To(Succeed())
+				Expect(os.WriteFile(path, []byte(GEMFILE_CONTENTS), 0644)).To(Succeed())
 
 				hasPassenger, err := parser.Parse(path)
 				Expect(err).NotTo(HaveOccurred())
