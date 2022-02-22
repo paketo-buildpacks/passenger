@@ -62,6 +62,7 @@ func testSimpleApp(t *testing.T, context spec.G, it spec.S) {
 					settings.Buildpacks.BundleInstall.Online,
 					settings.Buildpacks.Passenger.Online,
 				).
+				WithEnv(map[string]string{"BP_LOG_LEVEL": "DEBUG"}).
 				WithPullPolicy("never").
 				Execute(name, source)
 			Expect(err).NotTo(HaveOccurred(), logs.String())
@@ -79,7 +80,12 @@ func testSimpleApp(t *testing.T, context spec.G, it spec.S) {
 			Expect(logs).To(ContainLines(
 				MatchRegexp(fmt.Sprintf(`%s \d+\.\d+\.\d+`, settings.Buildpack.Name)),
 				"  Executing build process",
+				"  Getting the layer associated with curl:",
+				"    /layers/paketo-buildpacks_passenger/curl",
+				"",
 				MatchRegexp(`    Installing cURL \d+\.\d+\.\d+`),
+				"    Installation path: /layers/paketo-buildpacks_passenger/curl",
+				MatchRegexp(`    Dependency URI\: https\:\/\/deps\.paketo\.io\/curl\/curl_\d+\.\d+\.\d+_linux_noarch_bionic_.*\.tgz`),
 				MatchRegexp(`      Completed in ([0-9]*(\.[0-9]*)?[a-z]+)+`),
 				"",
 				"  Assigning launch processes:",

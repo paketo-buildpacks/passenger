@@ -12,12 +12,13 @@ import (
 )
 
 func main() {
+	logger := scribe.NewEmitter(os.Stdout).WithLevel(os.Getenv("BP_LOG_LEVEL"))
 	packit.Run(
 		passenger.Detect(passenger.NewGemfileParser()),
 		passenger.Build(
 			postal.NewService(cargo.NewTransport()),
 			chronos.DefaultClock,
-			scribe.NewEmitter(os.Stdout),
+			logger,
 		),
 	)
 }
