@@ -4,7 +4,7 @@ import "sync"
 
 type Parser struct {
 	ParseCall struct {
-		sync.Mutex
+		mutex     sync.Mutex
 		CallCount int
 		Receives  struct {
 			Path string
@@ -18,8 +18,8 @@ type Parser struct {
 }
 
 func (f *Parser) Parse(param1 string) (bool, error) {
-	f.ParseCall.Lock()
-	defer f.ParseCall.Unlock()
+	f.ParseCall.mutex.Lock()
+	defer f.ParseCall.mutex.Unlock()
 	f.ParseCall.CallCount++
 	f.ParseCall.Receives.Path = param1
 	if f.ParseCall.Stub != nil {
