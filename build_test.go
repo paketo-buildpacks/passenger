@@ -48,7 +48,7 @@ func testBuild(t *testing.T, context spec.G, it spec.S) {
 		build = passenger.Build(
 			dependencyManager,
 			chronos.NewClock(time.Now),
-			scribe.NewLogger(bytes.NewBuffer(nil)),
+			scribe.NewEmitter(bytes.NewBuffer(nil)),
 		)
 	})
 
@@ -79,8 +79,10 @@ func testBuild(t *testing.T, context spec.G, it spec.S) {
 				Processes: []packit.Process{
 					{
 						Type:    "web",
-						Command: "bundle exec passenger start --port ${PORT:-3000}",
+						Command: "bash",
+						Args:    []string{"-c", "bundle exec passenger start --port ${PORT:-3000}"},
 						Default: true,
+						Direct:  true,
 					},
 				},
 			},

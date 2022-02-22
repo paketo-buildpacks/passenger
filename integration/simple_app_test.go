@@ -82,8 +82,8 @@ func testSimpleApp(t *testing.T, context spec.G, it spec.S) {
 				MatchRegexp(`    Installing cURL \d+\.\d+\.\d+`),
 				MatchRegexp(`      Completed in ([0-9]*(\.[0-9]*)?[a-z]+)+`),
 				"",
-				"  Assigning launch processes",
-				"    web: bundle exec passenger start --port ${PORT:-3000}",
+				"  Assigning launch processes:",
+				"    web (default): bash -c bundle exec passenger start --port ${PORT:-3000}",
 				"",
 			))
 		})
