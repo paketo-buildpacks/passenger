@@ -26,14 +26,19 @@ func Build(dependencyManager DependencyManager, clock chronos.Clock, logger scri
 			return packit.BuildResult{}, err
 		}
 
+		logger.Debug.Process("Getting the layer associated with curl:")
 		curlLayer, err := context.Layers.Get("curl")
 		if err != nil {
 			return packit.BuildResult{}, err
 		}
+		logger.Debug.Subprocess(curlLayer.Path)
+		logger.Debug.Break()
 		curlLayer.Launch = true
 
 		logger.Subprocess("Installing %s %s", dependency.Name, dependency.Version)
 		duration, err := clock.Measure(func() error {
+			logger.Debug.Subprocess("Installation path: %s", curlLayer.Path)
+			logger.Debug.Subprocess("Dependency URI: %s", dependency.URI)
 			return dependencyManager.Deliver(dependency, context.CNBPath, curlLayer.Path, context.Platform.Path)
 		})
 		if err != nil {
