@@ -16,7 +16,7 @@ type DependencyManager interface {
 	Install(dependency postal.Dependency, cnbPath, layerPath string) error
 }
 
-func Build(dependencyManager DependencyManager, clock chronos.Clock, logger scribe.Logger) packit.BuildFunc {
+func Build(dependencyManager DependencyManager, clock chronos.Clock, logger scribe.Emitter) packit.BuildFunc {
 	return func(context packit.BuildContext) (packit.BuildResult, error) {
 		logger.Title("%s %s", context.BuildpackInfo.Name, context.BuildpackInfo.Version)
 
@@ -42,21 +42,22 @@ func Build(dependencyManager DependencyManager, clock chronos.Clock, logger scri
 		logger.Action("Completed in %s", duration.Round(time.Millisecond))
 		logger.Break()
 
-		command := `bundle exec passenger start --port ${PORT:-3000}`
-		logger.Process("Assigning launch processes")
-		logger.Subprocess("web: %s", command)
-		logger.Break()
+		args := `bundle exec passenger start --port ${PORT:-3000}`
+		processes := []packit.Process{
+			{
+				Type:    "web",
+				Command: "bash",
+				Args:    []string{"-c", args},
+				Default: true,
+				Direct:  true,
+			},
+		}
+		logger.LaunchProcesses(processes)
 
 		return packit.BuildResult{
 			Layers: []packit.Layer{curlLayer},
 			Launch: packit.LaunchMetadata{
-				Processes: []packit.Process{
-					{
-						Type:    "web",
-						Command: command,
-						Default: true,
-					},
-				},
+				Processes: processes,
 			},
 		}, nil
 	}

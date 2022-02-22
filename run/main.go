@@ -17,7 +17,7 @@ func main() {
 		passenger.Build(
 			postal.NewService(cargo.NewTransport()),
 			chronos.DefaultClock,
-			scribe.NewLogger(os.Stdout),
+			scribe.NewEmitter(os.Stdout),
 		),
 	)
 }
