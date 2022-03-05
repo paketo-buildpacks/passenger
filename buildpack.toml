@@ -16,17 +16,17 @@ api = "0.7"
   pre-package = "./scripts/build.sh"
 
   [[metadata.dependencies]]
-    cpe = "cpe:2.3:a:haxx:curl:7.81.0:*:*:*:*:*:*:*"
+    cpe = "cpe:2.3:a:haxx:curl:7.82.0:*:*:*:*:*:*:*"
     id = "curl"
     licenses = ["SSH-short", "curl"]
     name = "cURL"
-    purl = "pkg:generic/curl@7.81.0?checksum=ac8e1087711084548d788ef18b9b732c8de887457b81f616fc681d1044b32f98&download_url=https://curl.se/download/curl-7.81.0.tar.gz"
-    sha256 = "ffcced1e2d6975dc8c5a76472f0c41239e99da0fd30e0700cbd190aa9be0cb5b"
-    source = "https://curl.se/download/curl-7.81.0.tar.gz"
-    source_sha256 = "ac8e1087711084548d788ef18b9b732c8de887457b81f616fc681d1044b32f98"
+    purl = "pkg:generic/curl@7.82.0?checksum=910cc5fe279dc36e2cca534172c94364cf3fcf7d6494ba56e6c61a390881ddce&download_url=https://curl.se/download/curl-7.82.0.tar.gz"
+    sha256 = "f1d68aad72c31f9051f372b1068607f1301ab7f170959bcaa95f4ab0e6d27919"
+    source = "https://curl.se/download/curl-7.82.0.tar.gz"
+    source_sha256 = "910cc5fe279dc36e2cca534172c94364cf3fcf7d6494ba56e6c61a390881ddce"
     stacks = ["io.buildpacks.stacks.bionic"]
-    uri = "https://deps.paketo.io/curl/curl_7.81.0_linux_noarch_bionic_ffcced1e.tgz"
-    version = "7.81.0"
+    uri = "https://deps.paketo.io/curl/curl_7.82.0_linux_noarch_bionic_f1d68aad.tgz"
+    version = "7.82.0"
 
   [[metadata.dependency-constraints]]
     constraint = "7.*"
