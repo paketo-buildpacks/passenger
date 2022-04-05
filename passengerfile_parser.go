@@ -15,7 +15,7 @@ func NewPassengerfileParser() PassengerfileParser {
 }
 
 type Passengerfile struct {
-	Port int `json:"port"`
+	Port *int `json:"port,omitempty"`
 }
 
 func (p PassengerfileParser) Parse(path string) (Passengerfile, error) {

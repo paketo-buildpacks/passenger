@@ -120,7 +120,8 @@ func testBuild(t *testing.T, context spec.G, it spec.S) {
 
 	context("when the Passengerfile parser returns a config with a port", func() {
 		it.Before(func() {
-			passengerfileParser.ParseCall.Returns.Passengerfile = passenger.Passengerfile{Port: 1234}
+			port := 1234
+			passengerfileParser.ParseCall.Returns.Passengerfile = passenger.Passengerfile{Port: &port}
 
 		})
 

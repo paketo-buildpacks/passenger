@@ -40,7 +40,8 @@ func testPassengerfileParser(t *testing.T, context spec.G, it spec.S) {
 			passengerfile, err := parser.Parse(path)
 			Expect(err).NotTo(HaveOccurred())
 
-			Expect(passengerfile).To(Equal(passenger.Passengerfile{Port: 4000}))
+			expectedPort := 4000
+			Expect(passengerfile).To(Equal(passenger.Passengerfile{Port: &expectedPort}))
 		})
 
 		context("when the Passengerfile does not exist", func() {
@@ -65,7 +66,7 @@ func testPassengerfileParser(t *testing.T, context spec.G, it spec.S) {
 				passengerfile, err := parser.Parse(path)
 				Expect(err).NotTo(HaveOccurred())
 
-				Expect(passengerfile).To(Equal(passenger.Passengerfile{Port: 0}))
+				Expect(passengerfile).To(Equal(passenger.Passengerfile{Port: nil}))
 			})
 		})
 
