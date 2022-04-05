@@ -1,6 +1,7 @@
 package passenger
 
 import (
+	"fmt"
 	"path/filepath"
 	"time"
 
@@ -11,12 +12,18 @@ import (
 )
 
 //go:generate faux --interface DependencyManager --output fakes/dependency_manager.go
+//go:generate faux --interface PassengerfileConfigParser --output fakes/passengerfile_parser.go
+
 type DependencyManager interface {
 	Resolve(path, id, version, stack string) (postal.Dependency, error)
 	Deliver(dependency postal.Dependency, cnbPath, layerPath, platformPath string) error
 }
 
-func Build(dependencyManager DependencyManager, clock chronos.Clock, logger scribe.Emitter) packit.BuildFunc {
+type PassengerfileConfigParser interface {
+	Parse(path string) (Passengerfile, error)
+}
+
+func Build(dependencyManager DependencyManager, passengerfileParser PassengerfileConfigParser, clock chronos.Clock, logger scribe.Emitter) packit.BuildFunc {
 	return func(context packit.BuildContext) (packit.BuildResult, error) {
 		logger.Title("%s %s", context.BuildpackInfo.Name, context.BuildpackInfo.Version)
 
@@ -47,7 +54,18 @@ func Build(dependencyManager DependencyManager, clock chronos.Clock, logger scri
 		logger.Action("Completed in %s", duration.Round(time.Millisecond))
 		logger.Break()
 
-		args := `bundle exec passenger start --port ${PORT:-3000}`
+		passengerfilePath := filepath.Join(context.WorkingDir, "Passengerfile.json")
+		passengerfileConfig, err := passengerfileParser.Parse(passengerfilePath)
+		if err != nil {
+			return packit.BuildResult{}, err
+		}
+
+		port := 3000
+		if passengerfileConfig.Port != 0 {
+			port = passengerfileConfig.Port
+		}
+
+		args := fmt.Sprintf(`bundle exec passenger start --port ${PORT:-%d}`, port)
 		processes := []packit.Process{
 			{
 				Type:    "web",

@@ -3,6 +3,7 @@ package passenger_test
 import (
 	"bytes"
 	"errors"
+	"fmt"
 	"os"
 	"path/filepath"
 	"testing"
@@ -23,10 +24,11 @@ func testBuild(t *testing.T, context spec.G, it spec.S) {
 	var (
 		Expect = NewWithT(t).Expect
 
-		layersDir         string
-		workingDir        string
-		cnbDir            string
-		dependencyManager *fakes.DependencyManager
+		layersDir           string
+		workingDir          string
+		cnbDir              string
+		dependencyManager   *fakes.DependencyManager
+		passengerfileParser *fakes.PassengerfileConfigParser
 
 		build packit.BuildFunc
 	)
@@ -45,8 +47,11 @@ func testBuild(t *testing.T, context spec.G, it spec.S) {
 		dependencyManager = &fakes.DependencyManager{}
 		dependencyManager.ResolveCall.Returns.Dependency = postal.Dependency{ID: "curl"}
 
+		passengerfileParser = &fakes.PassengerfileConfigParser{}
+
 		build = passenger.Build(
 			dependencyManager,
+			passengerfileParser,
 			chronos.NewClock(time.Now),
 			scribe.NewEmitter(bytes.NewBuffer(nil)),
 		)
@@ -111,6 +116,41 @@ func testBuild(t *testing.T, context spec.G, it spec.S) {
 		Expect(dependencyManager.DeliverCall.Receives.CnbPath).To(Equal(cnbDir))
 		Expect(dependencyManager.DeliverCall.Receives.LayerPath).To(Equal(filepath.Join(layersDir, "curl")))
 		Expect(dependencyManager.DeliverCall.Receives.PlatformPath).To(Equal("platform"))
+	})
+
+	context("when the Passengerfile parser returns a config with a port", func() {
+		it.Before(func() {
+			passengerfileParser.ParseCall.Returns.Passengerfile = passenger.Passengerfile{Port: 1234}
+
+		})
+
+		it("uses that port as the default config", func() {
+			result, err := build(packit.BuildContext{
+				WorkingDir: workingDir,
+				CNBPath:    cnbDir,
+				Stack:      "some-stack",
+				BuildpackInfo: packit.BuildpackInfo{
+					Name:    "Some Buildpack",
+					Version: "some-version",
+				},
+				Plan: packit.BuildpackPlan{
+					Entries: []packit.BuildpackPlanEntry{},
+				},
+				Platform: packit.Platform{Path: "platform"},
+				Layers:   packit.Layers{Path: layersDir},
+			})
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(result.Launch.Processes).To(Equal([]packit.Process{
+				{
+					Type:    "web",
+					Command: "bash",
+					Args:    []string{"-c", "bundle exec passenger start --port ${PORT:-1234}"},
+					Default: true,
+					Direct:  true,
+				},
+			}))
+		})
 	})
 
 	context("failure cases", func() {
@@ -181,6 +221,20 @@ func testBuild(t *testing.T, context spec.G, it spec.S) {
 				})
 				Expect(err).To(MatchError("failed to install curl"))
 			})
+		})
+
+		context("when parsing the Passengerfile returns an error", func() {
+			it.Before(func() {
+				passengerfileParser.ParseCall.Returns.Error = fmt.Errorf("some error")
+			})
+
+			it("returns the error", func() {
+				_, err := build(packit.BuildContext{})
+				Expect(err).To(HaveOccurred())
+
+				Expect(err).To(MatchError(ContainSubstring("some error")))
+			})
+
 		})
 	})
 }
