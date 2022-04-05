@@ -61,8 +61,8 @@ func Build(dependencyManager DependencyManager, passengerfileParser Passengerfil
 		}
 
 		port := 3000
-		if passengerfileConfig.Port != 0 {
-			port = passengerfileConfig.Port
+		if passengerfileConfig.Port != nil {
+			port = *passengerfileConfig.Port
 		}
 
 		args := fmt.Sprintf(`bundle exec passenger start --port ${PORT:-%d}`, port)
