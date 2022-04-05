@@ -17,6 +17,7 @@ func main() {
 		passenger.Detect(passenger.NewGemfileParser()),
 		passenger.Build(
 			postal.NewService(cargo.NewTransport()),
+			passenger.NewPassengerfileParser(),
 			chronos.DefaultClock,
 			logger,
 		),

@@ -12,5 +12,6 @@ func TestUnitPassenger(t *testing.T) {
 	suite("Build", testBuild)
 	suite("Detect", testDetect)
 	suite("GemfileParser", testGemfileParser)
+	suite("PassengerfileParser", testPassengerfileParser)
 	suite.Run(t)
 }
