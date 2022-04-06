@@ -48,6 +48,7 @@ func testBuild(t *testing.T, context spec.G, it spec.S) {
 		dependencyManager.ResolveCall.Returns.Dependency = postal.Dependency{ID: "curl"}
 
 		passengerfileParser = &fakes.PassengerfileConfigParser{}
+		passengerfileParser.ParsePortCall.Returns.Int = 1234
 
 		build = passenger.Build(
 			dependencyManager,
@@ -86,7 +87,7 @@ func testBuild(t *testing.T, context spec.G, it spec.S) {
 					{
 						Type:    "web",
 						Command: "bash",
-						Args:    []string{"-c", "bundle exec passenger start --port ${PORT:-3000}"},
+						Args:    []string{"-c", "bundle exec passenger start --port ${PORT:-1234}"},
 						Default: true,
 						Direct:  true,
 					},
@@ -116,42 +117,9 @@ func testBuild(t *testing.T, context spec.G, it spec.S) {
 		Expect(dependencyManager.DeliverCall.Receives.CnbPath).To(Equal(cnbDir))
 		Expect(dependencyManager.DeliverCall.Receives.LayerPath).To(Equal(filepath.Join(layersDir, "curl")))
 		Expect(dependencyManager.DeliverCall.Receives.PlatformPath).To(Equal("platform"))
-	})
 
-	context("when the Passengerfile parser returns a config with a port", func() {
-		it.Before(func() {
-			port := 1234
-			passengerfileParser.ParseCall.Returns.Passengerfile = passenger.Passengerfile{Port: &port}
-
-		})
-
-		it("uses that port as the default config", func() {
-			result, err := build(packit.BuildContext{
-				WorkingDir: workingDir,
-				CNBPath:    cnbDir,
-				Stack:      "some-stack",
-				BuildpackInfo: packit.BuildpackInfo{
-					Name:    "Some Buildpack",
-					Version: "some-version",
-				},
-				Plan: packit.BuildpackPlan{
-					Entries: []packit.BuildpackPlanEntry{},
-				},
-				Platform: packit.Platform{Path: "platform"},
-				Layers:   packit.Layers{Path: layersDir},
-			})
-			Expect(err).NotTo(HaveOccurred())
-
-			Expect(result.Launch.Processes).To(Equal([]packit.Process{
-				{
-					Type:    "web",
-					Command: "bash",
-					Args:    []string{"-c", "bundle exec passenger start --port ${PORT:-1234}"},
-					Default: true,
-					Direct:  true,
-				},
-			}))
-		})
+		Expect(passengerfileParser.ParsePortCall.Receives.Path).To(Equal(filepath.Join(workingDir, "Passengerfile.json")))
+		Expect(passengerfileParser.ParsePortCall.Receives.DefaultPort).To(Equal(3000))
 	})
 
 	context("failure cases", func() {
@@ -226,7 +194,7 @@ func testBuild(t *testing.T, context spec.G, it spec.S) {
 
 		context("when parsing the Passengerfile returns an error", func() {
 			it.Before(func() {
-				passengerfileParser.ParseCall.Returns.Error = fmt.Errorf("some error")
+				passengerfileParser.ParsePortCall.Returns.Error = fmt.Errorf("some error")
 			})
 
 			it("returns the error", func() {

@@ -1,33 +1,31 @@
 package fakes
 
-import (
-	"sync"
-
-	"github.com/paketo-buildpacks/passenger"
-)
+import "sync"
 
 type PassengerfileConfigParser struct {
-	ParseCall struct {
+	ParsePortCall struct {
 		mutex     sync.Mutex
 		CallCount int
 		Receives  struct {
-			Path string
+			Path        string
+			DefaultPort int
 		}
 		Returns struct {
-			Passengerfile passenger.Passengerfile
-			Error         error
+			Int   int
+			Error error
 		}
-		Stub func(string) (passenger.Passengerfile, error)
+		Stub func(string, int) (int, error)
 	}
 }
 
-func (f *PassengerfileConfigParser) Parse(param1 string) (passenger.Passengerfile, error) {
-	f.ParseCall.mutex.Lock()
-	defer f.ParseCall.mutex.Unlock()
-	f.ParseCall.CallCount++
-	f.ParseCall.Receives.Path = param1
-	if f.ParseCall.Stub != nil {
-		return f.ParseCall.Stub(param1)
+func (f *PassengerfileConfigParser) ParsePort(param1 string, param2 int) (int, error) {
+	f.ParsePortCall.mutex.Lock()
+	defer f.ParsePortCall.mutex.Unlock()
+	f.ParsePortCall.CallCount++
+	f.ParsePortCall.Receives.Path = param1
+	f.ParsePortCall.Receives.DefaultPort = param2
+	if f.ParsePortCall.Stub != nil {
+		return f.ParsePortCall.Stub(param1, param2)
 	}
-	return f.ParseCall.Returns.Passengerfile, f.ParseCall.Returns.Error
+	return f.ParsePortCall.Returns.Int, f.ParsePortCall.Returns.Error
 }
