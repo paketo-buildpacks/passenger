@@ -26,6 +26,8 @@ func testPassengerfileParser(t *testing.T, context spec.G, it spec.S) {
 
 		path = file.Name()
 
+		Expect(os.WriteFile(path, []byte(`{"port":4000}`), 0644)).To(Succeed())
+
 		parser = passenger.NewPassengerfileParser()
 	})
 
@@ -33,15 +35,12 @@ func testPassengerfileParser(t *testing.T, context spec.G, it spec.S) {
 		Expect(os.RemoveAll(path)).To(Succeed())
 	})
 
-	context("Parse", func() {
-		it("returns the parsed Passengerfile", func() {
-			Expect(os.WriteFile(path, []byte(`{"port":4000}`), 0644)).To(Succeed())
-
-			passengerfile, err := parser.Parse(path)
+	context("ParsePort", func() {
+		it("returns the port from the Passengerfile", func() {
+			passengerfile, err := parser.ParsePort(path, 1234)
 			Expect(err).NotTo(HaveOccurred())
 
-			expectedPort := 4000
-			Expect(passengerfile).To(Equal(passenger.Passengerfile{Port: &expectedPort}))
+			Expect(passengerfile).To(Equal(4000))
 		})
 
 		context("when the Passengerfile does not exist", func() {
@@ -49,11 +48,11 @@ func testPassengerfileParser(t *testing.T, context spec.G, it spec.S) {
 				Expect(os.Remove(path)).To(Succeed())
 			})
 
-			it("returns empty Passengerfile struct", func() {
-				passengerfile, err := parser.Parse(path)
+			it("returns the provided default port", func() {
+				port, err := parser.ParsePort(path, 1234)
 				Expect(err).NotTo(HaveOccurred())
 
-				Expect(passengerfile).To(Equal(passenger.Passengerfile{}))
+				Expect(port).To(Equal(1234))
 			})
 		})
 
@@ -62,11 +61,11 @@ func testPassengerfileParser(t *testing.T, context spec.G, it spec.S) {
 				Expect(os.WriteFile(path, []byte(`{"some-other-field":"some-other-value"}`), 0644)).To(Succeed())
 			})
 
-			it("returns Passengerfile struct with default port", func() {
-				passengerfile, err := parser.Parse(path)
+			it("returns the provided default port", func() {
+				port, err := parser.ParsePort(path, 1234)
 				Expect(err).NotTo(HaveOccurred())
 
-				Expect(passengerfile).To(Equal(passenger.Passengerfile{Port: nil}))
+				Expect(port).To(Equal(1234))
 			})
 		})
 
@@ -89,7 +88,7 @@ func testPassengerfileParser(t *testing.T, context spec.G, it spec.S) {
 				})
 
 				it("returns an error", func() {
-					_, err := parser.Parse(filepath.Join(tempDir, "some-file"))
+					_, err := parser.ParsePort(filepath.Join(tempDir, "some-file"), 1234)
 					Expect(err).To(HaveOccurred())
 					Expect(err).To(MatchError(ContainSubstring("failed to determine if Passengerfile exists:")))
 					Expect(err).To(MatchError(ContainSubstring("some-file")))
@@ -102,7 +101,7 @@ func testPassengerfileParser(t *testing.T, context spec.G, it spec.S) {
 				})
 
 				it("returns an error", func() {
-					_, err := parser.Parse(path)
+					_, err := parser.ParsePort(path, 1234)
 					Expect(err).To(HaveOccurred())
 					Expect(err).To(MatchError(ContainSubstring("failed to read Passengerfile:")))
 					Expect(err).To(MatchError(ContainSubstring("permission denied")))
@@ -115,7 +114,7 @@ func testPassengerfileParser(t *testing.T, context spec.G, it spec.S) {
 				})
 
 				it("returns an error", func() {
-					_, err := parser.Parse(path)
+					_, err := parser.ParsePort(path, 1234)
 					Expect(err).To(HaveOccurred())
 					Expect(err).To(MatchError(ContainSubstring("failed to parse Passengerfile:")))
 				})

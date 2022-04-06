@@ -20,7 +20,7 @@ type DependencyManager interface {
 }
 
 type PassengerfileConfigParser interface {
-	Parse(path string) (Passengerfile, error)
+	ParsePort(path string, defaultPort int) (int, error)
 }
 
 func Build(dependencyManager DependencyManager, passengerfileParser PassengerfileConfigParser, clock chronos.Clock, logger scribe.Emitter) packit.BuildFunc {
@@ -55,14 +55,11 @@ func Build(dependencyManager DependencyManager, passengerfileParser Passengerfil
 		logger.Break()
 
 		passengerfilePath := filepath.Join(context.WorkingDir, "Passengerfile.json")
-		passengerfileConfig, err := passengerfileParser.Parse(passengerfilePath)
+
+		defaultPort := 3000
+		port, err := passengerfileParser.ParsePort(passengerfilePath, defaultPort)
 		if err != nil {
 			return packit.BuildResult{}, err
-		}
-
-		port := 3000
-		if passengerfileConfig.Port != nil {
-			port = *passengerfileConfig.Port
 		}
 
 		args := fmt.Sprintf(`bundle exec passenger start --port ${PORT:-%d}`, port)
