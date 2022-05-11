@@ -12,6 +12,7 @@ import (
 	"github.com/paketo-buildpacks/packit/v2"
 	"github.com/paketo-buildpacks/packit/v2/chronos"
 	"github.com/paketo-buildpacks/packit/v2/postal"
+	"github.com/paketo-buildpacks/packit/v2/sbom"
 	"github.com/paketo-buildpacks/packit/v2/scribe"
 	"github.com/paketo-buildpacks/passenger"
 	"github.com/paketo-buildpacks/passenger/fakes"
@@ -29,8 +30,10 @@ func testBuild(t *testing.T, context spec.G, it spec.S) {
 		cnbDir              string
 		dependencyManager   *fakes.DependencyManager
 		passengerfileParser *fakes.PassengerfileConfigParser
+		sbomGenerator       *fakes.SBOMGenerator
 
-		build packit.BuildFunc
+		build        packit.BuildFunc
+		buildContext packit.BuildContext
 	)
 
 	it.Before(func() {
@@ -50,12 +53,31 @@ func testBuild(t *testing.T, context spec.G, it spec.S) {
 		passengerfileParser = &fakes.PassengerfileConfigParser{}
 		passengerfileParser.ParsePortCall.Returns.Int = 1234
 
+		sbomGenerator = &fakes.SBOMGenerator{}
+		sbomGenerator.GenerateFromDependencyCall.Returns.SBOM = sbom.SBOM{}
+
 		build = passenger.Build(
 			dependencyManager,
 			passengerfileParser,
+			sbomGenerator,
 			chronos.NewClock(time.Now),
 			scribe.NewEmitter(bytes.NewBuffer(nil)),
 		)
+		buildContext = packit.BuildContext{
+			WorkingDir: workingDir,
+			CNBPath:    cnbDir,
+			Stack:      "some-stack",
+			BuildpackInfo: packit.BuildpackInfo{
+				Name:        "Some Buildpack",
+				Version:     "some-version",
+				SBOMFormats: []string{sbom.CycloneDXFormat, sbom.SPDXFormat},
+			},
+			Plan: packit.BuildpackPlan{
+				Entries: []packit.BuildpackPlanEntry{},
+			},
+			Platform: packit.Platform{Path: "platform"},
+			Layers:   packit.Layers{Path: layersDir},
+		}
 	})
 
 	it.After(func() {
@@ -65,48 +87,45 @@ func testBuild(t *testing.T, context spec.G, it spec.S) {
 	})
 
 	it("returns a result that provides a passenger start command", func() {
-		result, err := build(packit.BuildContext{
-			WorkingDir: workingDir,
-			CNBPath:    cnbDir,
-			Stack:      "some-stack",
-			BuildpackInfo: packit.BuildpackInfo{
-				Name:    "Some Buildpack",
-				Version: "some-version",
-			},
-			Plan: packit.BuildpackPlan{
-				Entries: []packit.BuildpackPlanEntry{},
-			},
-			Platform: packit.Platform{Path: "platform"},
-			Layers:   packit.Layers{Path: layersDir},
-		})
+		result, err := build(buildContext)
 		Expect(err).NotTo(HaveOccurred())
 
-		Expect(result).To(Equal(packit.BuildResult{
-			Launch: packit.LaunchMetadata{
-				Processes: []packit.Process{
-					{
-						Type:    "web",
-						Command: "bash",
-						Args:    []string{"-c", "bundle exec passenger start --port ${PORT:-1234}"},
-						Default: true,
-						Direct:  true,
-					},
-				},
+		Expect(result.Layers).To(HaveLen(1))
+		layer := result.Layers[0]
+
+		Expect(layer.Name).To(Equal("curl"))
+		Expect(layer.Path).To(Equal(filepath.Join(layersDir, "curl")))
+
+		Expect(layer.SharedEnv).To(BeEmpty())
+		Expect(layer.BuildEnv).To(BeEmpty())
+		Expect(layer.LaunchEnv).To(BeEmpty())
+		Expect(layer.ProcessLaunchEnv).To(BeEmpty())
+
+		Expect(layer.Build).To(BeFalse())
+		Expect(layer.Launch).To(BeTrue())
+		Expect(layer.Cache).To(BeFalse())
+
+		Expect(layer.Metadata).To(BeEmpty())
+
+		Expect(layer.SBOM.Formats()).To(Equal([]packit.SBOMFormat{
+			{
+				Extension: sbom.Format(sbom.CycloneDXFormat).Extension(),
+				Content:   sbom.NewFormattedReader(sbom.SBOM{}, sbom.CycloneDXFormat),
 			},
-			Layers: []packit.Layer{
-				{
-					Name:             "curl",
-					Path:             filepath.Join(layersDir, "curl"),
-					SharedEnv:        packit.Environment{},
-					BuildEnv:         packit.Environment{},
-					LaunchEnv:        packit.Environment{},
-					ProcessLaunchEnv: map[string]packit.Environment{},
-					Build:            false,
-					Launch:           true,
-					Cache:            false,
-				},
+			{
+				Extension: sbom.Format(sbom.SPDXFormat).Extension(),
+				Content:   sbom.NewFormattedReader(sbom.SBOM{}, sbom.SPDXFormat),
 			},
 		}))
+
+		Expect(result.Launch.Processes).To(HaveLen(1))
+		process := result.Launch.Processes[0]
+
+		Expect(process.Type).To(Equal("web"))
+		Expect(process.Command).To(Equal("bash"))
+		Expect(process.Args).To(Equal([]string{"-c", "bundle exec passenger start --port ${PORT:-1234}"}))
+		Expect(process.Default).To(BeTrue())
+		Expect(process.Direct).To(BeTrue())
 
 		Expect(dependencyManager.ResolveCall.Receives.Path).To(Equal(filepath.Join(cnbDir, "buildpack.toml")))
 		Expect(dependencyManager.ResolveCall.Receives.Id).To(Equal("curl"))
@@ -117,6 +136,9 @@ func testBuild(t *testing.T, context spec.G, it spec.S) {
 		Expect(dependencyManager.DeliverCall.Receives.CnbPath).To(Equal(cnbDir))
 		Expect(dependencyManager.DeliverCall.Receives.LayerPath).To(Equal(filepath.Join(layersDir, "curl")))
 		Expect(dependencyManager.DeliverCall.Receives.PlatformPath).To(Equal("platform"))
+
+		Expect(sbomGenerator.GenerateFromDependencyCall.Receives.Dependency).To(Equal(postal.Dependency{ID: "curl"}))
+		Expect(sbomGenerator.GenerateFromDependencyCall.Receives.Dir).To(Equal(filepath.Join(layersDir, "curl")))
 
 		Expect(passengerfileParser.ParsePortCall.Receives.Path).To(Equal(filepath.Join(workingDir, "Passengerfile.json")))
 		Expect(passengerfileParser.ParsePortCall.Receives.DefaultPort).To(Equal(3000))
@@ -129,19 +151,7 @@ func testBuild(t *testing.T, context spec.G, it spec.S) {
 			})
 
 			it("returns an error", func() {
-				_, err := build(packit.BuildContext{
-					WorkingDir: workingDir,
-					CNBPath:    cnbDir,
-					Stack:      "some-stack",
-					BuildpackInfo: packit.BuildpackInfo{
-						Name:    "Some Buildpack",
-						Version: "some-version",
-					},
-					Plan: packit.BuildpackPlan{
-						Entries: []packit.BuildpackPlanEntry{},
-					},
-					Layers: packit.Layers{Path: layersDir},
-				})
+				_, err := build(buildContext)
 				Expect(err).To(MatchError("failed to resolve curl"))
 			})
 		})
@@ -152,19 +162,7 @@ func testBuild(t *testing.T, context spec.G, it spec.S) {
 			})
 
 			it("returns an error", func() {
-				_, err := build(packit.BuildContext{
-					WorkingDir: workingDir,
-					CNBPath:    cnbDir,
-					Stack:      "some-stack",
-					BuildpackInfo: packit.BuildpackInfo{
-						Name:    "Some Buildpack",
-						Version: "some-version",
-					},
-					Plan: packit.BuildpackPlan{
-						Entries: []packit.BuildpackPlanEntry{},
-					},
-					Layers: packit.Layers{Path: layersDir},
-				})
+				_, err := build(buildContext)
 				Expect(err).To(MatchError(ContainSubstring("permission denied")))
 			})
 		})
@@ -175,19 +173,7 @@ func testBuild(t *testing.T, context spec.G, it spec.S) {
 			})
 
 			it("returns an error", func() {
-				_, err := build(packit.BuildContext{
-					WorkingDir: workingDir,
-					CNBPath:    cnbDir,
-					Stack:      "some-stack",
-					BuildpackInfo: packit.BuildpackInfo{
-						Name:    "Some Buildpack",
-						Version: "some-version",
-					},
-					Plan: packit.BuildpackPlan{
-						Entries: []packit.BuildpackPlanEntry{},
-					},
-					Layers: packit.Layers{Path: layersDir},
-				})
+				_, err := build(buildContext)
 				Expect(err).To(MatchError("failed to install curl"))
 			})
 		})
@@ -198,12 +184,35 @@ func testBuild(t *testing.T, context spec.G, it spec.S) {
 			})
 
 			it("returns the error", func() {
-				_, err := build(packit.BuildContext{})
+				_, err := build(buildContext)
 				Expect(err).To(HaveOccurred())
 
 				Expect(err).To(MatchError(ContainSubstring("some error")))
 			})
+		})
 
+		context("when generating the SBOM returns an error", func() {
+			it.Before(func() {
+				buildContext.BuildpackInfo.SBOMFormats = []string{"random-format"}
+			})
+
+			it("returns an error", func() {
+				_, err := build(buildContext)
+
+				Expect(err).To(MatchError(`unsupported SBOM format: 'random-format'`))
+			})
+		})
+
+		context("when formatting the SBOM returns an error", func() {
+			it.Before(func() {
+				sbomGenerator.GenerateFromDependencyCall.Returns.Error = errors.New("failed to generate SBOM")
+			})
+
+			it("returns an error", func() {
+				_, err := build(buildContext)
+
+				Expect(err).To(MatchError(ContainSubstring("failed to generate SBOM")))
+			})
 		})
 	})
 }

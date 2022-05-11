@@ -8,11 +8,13 @@ import (
 	"github.com/paketo-buildpacks/packit/v2"
 	"github.com/paketo-buildpacks/packit/v2/chronos"
 	"github.com/paketo-buildpacks/packit/v2/postal"
+	"github.com/paketo-buildpacks/packit/v2/sbom"
 	"github.com/paketo-buildpacks/packit/v2/scribe"
 )
 
 //go:generate faux --interface DependencyManager --output fakes/dependency_manager.go
 //go:generate faux --interface PassengerfileConfigParser --output fakes/passengerfile_parser.go
+//go:generate faux --interface SBOMGenerator --output fakes/sbom_generator.go
 
 type DependencyManager interface {
 	Resolve(path, id, version, stack string) (postal.Dependency, error)
@@ -23,7 +25,17 @@ type PassengerfileConfigParser interface {
 	ParsePort(path string, defaultPort int) (int, error)
 }
 
-func Build(dependencyManager DependencyManager, passengerfileParser PassengerfileConfigParser, clock chronos.Clock, logger scribe.Emitter) packit.BuildFunc {
+type SBOMGenerator interface {
+	GenerateFromDependency(dependency postal.Dependency, dir string) (sbom.SBOM, error)
+}
+
+func Build(
+	dependencyManager DependencyManager,
+	passengerfileParser PassengerfileConfigParser,
+	sbomGenerator SBOMGenerator,
+	clock chronos.Clock,
+	logger scribe.Emitter,
+) packit.BuildFunc {
 	return func(context packit.BuildContext) (packit.BuildResult, error) {
 		logger.Title("%s %s", context.BuildpackInfo.Name, context.BuildpackInfo.Version)
 
@@ -53,6 +65,25 @@ func Build(dependencyManager DependencyManager, passengerfileParser Passengerfil
 		}
 		logger.Action("Completed in %s", duration.Round(time.Millisecond))
 		logger.Break()
+
+		logger.GeneratingSBOM(curlLayer.Path)
+		var sbomContent sbom.SBOM
+		duration, err = clock.Measure(func() error {
+			sbomContent, err = sbomGenerator.GenerateFromDependency(dependency, curlLayer.Path)
+			return err
+		})
+		if err != nil {
+			return packit.BuildResult{}, err
+		}
+
+		logger.Action("Completed in %s", duration.Round(time.Millisecond))
+		logger.Break()
+
+		logger.FormattingSBOM(context.BuildpackInfo.SBOMFormats...)
+		curlLayer.SBOM, err = sbomContent.InFormats(context.BuildpackInfo.SBOMFormats...)
+		if err != nil {
+			return packit.BuildResult{}, err
+		}
 
 		passengerfilePath := filepath.Join(context.WorkingDir, "Passengerfile.json")
 
