@@ -3,7 +3,7 @@ package passenger
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"os"
 
 	"github.com/paketo-buildpacks/packit/v2/fs"
 )
@@ -28,7 +28,7 @@ func (p PassengerfileParser) ParsePort(path string, defaultPort int) (int, error
 		return defaultPort, nil
 	}
 
-	content, err := ioutil.ReadFile(path)
+	content, err := os.ReadFile(path)
 	if err != nil {
 		return 0, fmt.Errorf("failed to read Passengerfile: %w", err)
 	}
