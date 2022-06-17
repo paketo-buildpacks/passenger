@@ -84,11 +84,11 @@ func testSimpleApp(t *testing.T, context spec.G, it spec.S) {
 				MatchRegexp(fmt.Sprintf(`%s \d+\.\d+\.\d+`, settings.Buildpack.Name)),
 				"  Executing build process",
 				"  Getting the layer associated with curl:",
-				"    /layers/paketo-buildpacks_passenger/curl",
+				fmt.Sprintf("    /layers/%s/curl", strings.ReplaceAll(settings.Buildpack.ID, "/", "_")),
 			))
 			Expect(logs).To(ContainLines(
 				MatchRegexp(`    Installing cURL \d+\.\d+\.\d+`),
-				"    Installation path: /layers/paketo-buildpacks_passenger/curl",
+				fmt.Sprintf("    Installation path: /layers/%s/curl", strings.ReplaceAll(settings.Buildpack.ID, "/", "_")),
 				MatchRegexp(`    Dependency URI\: https\:\/\/deps\.paketo\.io\/curl\/curl_\d+\.\d+\.\d+_linux_noarch_bionic_.*\.tgz`),
 				MatchRegexp(`      Completed in ([0-9]*(\.[0-9]*)?[a-z]+)+`),
 			))
