@@ -5,7 +5,7 @@ api = "0.7"
   homepage = "https://github.com/paketo-buildpacks/passenger"
   id = "paketo-buildpacks/passenger"
   keywords = ["ruby", "passenger"]
-  name = "Paketo Passenger Buildpack"
+  name = "Paketo Buildpack for Passenger"
   sbom-formats = ["application/vnd.cyclonedx+json", "application/spdx+json", "application/vnd.syft+json"]
 
   [[buildpack.licenses]]
