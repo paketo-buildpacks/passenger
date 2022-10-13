@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/joshuatcasey/collections"
 	"github.com/joshuatcasey/libdependency/github"
 	"github.com/joshuatcasey/libdependency/retrieve"
 	"github.com/joshuatcasey/libdependency/upstream"
@@ -16,6 +17,16 @@ import (
 	"github.com/paketo-buildpacks/packit/v2/cargo"
 	"golang.org/x/crypto/openpgp"
 )
+
+type StackAndTargetPair struct {
+	stacks []string
+	target string
+}
+
+var supportedStacks = []StackAndTargetPair{
+	{stacks: []string{"io.buildpacks.stacks.jammy"}, target: "jammy"},
+	{stacks: []string{"io.buildpacks.stacks.bionic"}, target: "bionic"},
+}
 
 func generateMetadata(versionFetcher versionology.VersionFetcher) ([]versionology.Dependency, error) {
 	version := versionFetcher.Version().String()
@@ -51,11 +62,13 @@ func generateMetadata(versionFetcher versionology.VersionFetcher) ([]versionolog
 		PURL:           retrieve.GeneratePURL("curl", version, sourceSHA256, sourceURL),
 		Source:         sourceURL,
 		SourceChecksum: fmt.Sprintf("sha256:%s", sourceSHA256),
-		Stacks:         []string{"io.buildpacks.stacks.bionic"},
 		Version:        version,
 	}
 
-	return versionology.NewDependencyArray(configMetadataDependency, "bionic")
+	return collections.TransformFuncWithError(supportedStacks, func(pair StackAndTargetPair) (versionology.Dependency, error) {
+		configMetadataDependency.Stacks = pair.stacks
+		return versionology.NewDependency(configMetadataDependency, pair.target)
+	})
 }
 
 func verifyASC(signature, target, pgpKey string) error {
