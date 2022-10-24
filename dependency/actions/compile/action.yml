@@ -18,20 +18,22 @@ runs:
   steps:
 
   - name: docker build
-    id: docker-build
-    env:
-      SKIP_LOGIN: true
-    uses: actions-hub/docker/cli@master
-    with:
-      args: "build -t compilation -f dependency/actions/compile/${{ inputs.target }}.Dockerfile dependency/actions/compile"
+    shell: bash
+    run: |
+      docker build \
+        --tag compilation \
+        --file dependency/actions/compile/${{ inputs.target }}.Dockerfile \
+        dependency/actions/compile
 
   - name: docker run
-    id: docker-run
-    uses: actions-hub/docker/cli@master
-    env:
-      SKIP_LOGIN: true
-    with:
-      args: "run -v ${{ inputs.outputDir }}:/home compilation --version ${{ inputs.version }} --outputDir /home --target ${{ inputs.target }}"
+    shell: bash
+    run: |
+      docker run \
+        --volume ${{ inputs.outputDir }}:/home \
+        compilation \
+        --version ${{ inputs.version }} \
+        --outputDir /home \
+        --target ${{ inputs.target }}
 
   - name: print contents of output dir
     shell: bash
