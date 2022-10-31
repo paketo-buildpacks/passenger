@@ -7,6 +7,7 @@ retrieve:
 		--output=$(output)
 
 test:
-	./test/test.sh \
+	@cd test; \
+	./test.sh \
 		--tarballPath $(tarballPath) \
 		--expectedVersion $(version)
