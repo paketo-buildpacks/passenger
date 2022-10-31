@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/BurntSushi/toml"
+	"github.com/onsi/gomega/format"
 	"github.com/paketo-buildpacks/occam"
 	"github.com/sclevine/spec"
 	"github.com/sclevine/spec/report"
@@ -44,6 +45,10 @@ var settings struct {
 }
 
 func TestIntegration(t *testing.T) {
+	// Do not truncate Gomega matcher output
+	// The buildpack output text can be large and we often want to see all of it.
+	format.MaxLength = 0
+
 	Expect := NewWithT(t).Expect
 
 	root, err := filepath.Abs("./..")
