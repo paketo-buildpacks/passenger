@@ -18,5 +18,5 @@ $ ./test.sh \
   --expectedVersion 999.999.999
 tarballPath=/tmp/output_dir/curl_7.85.0_linux_bionic_f0e0bef7.tgz
 expectedVersion=999.999.999
-Version 3.10.7 does not match expected version 999.999.999
+Version 7.85.0 does not match expected version 999.999.999
 ```
