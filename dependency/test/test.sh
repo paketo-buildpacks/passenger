@@ -1,45 +1,19 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 set -euo pipefail
+#shopt -s inherit_errexit
 
-extract_tarball() {
-  rm -rf curl
-  mkdir curl
-  tar --extract \
-    --file "$1" \
-    --directory curl
-}
-
-set_ld_library_path() {
-  export LD_LIBRARY_PATH="$PWD/curl/lib:${LD_LIBRARY_PATH:-}"
-}
-
-check_version() {
-  expected_version=$1
-  actual_version="$(./curl/bin/curl -V | head -n1 | awk '{ print $2 }')"
-  if [[ "${actual_version}" != "${expected_version}" ]]; then
-    echo "Version ${actual_version} does not match expected version ${expected_version}"
-    exit 1
-  fi
-}
-
-check_server() {
-  output="$(mktemp)"
-  if ! ./curl/bin/curl -fsS https://example.org > "${output}"; then
-    cat "${output}"
-    exit 1
-  fi
-}
+parent_dir="$(cd "$(dirname "$0")" && pwd)"
 
 main() {
-  local tarballPath expectedVersion
-  tarballPath=""
+  local tarball_path expectedVersion
+  tarball_path=""
   expectedVersion=""
 
   while [ "${#}" != 0 ]; do
     case "${1}" in
       --tarballPath)
-        tarballPath="${2}"
+        tarball_path="${2}"
         shift 2
         ;;
 
@@ -58,7 +32,7 @@ main() {
     esac
   done
 
-  if [[ "${tarballPath}" == "" ]]; then
+  if [[ "${tarball_path}" == "" ]]; then
     echo "--tarballPath is required"
     exit 1
   fi
@@ -68,15 +42,38 @@ main() {
     exit 1
   fi
 
-  echo "tarballPath=${tarballPath}"
-  echo "expectedVersion=${expectedVersion}"
+  echo "Outside image: tarball_path=${tarball_path}"
+  echo "Outside image: expectedVersion=${expectedVersion}"
 
-  extract_tarball "${tarballPath}"
-  set_ld_library_path
-  check_version "${expectedVersion}"
-  check_server
+  if [[ $(basename "${tarball_path}") == *"bionic"* ]]; then
+    echo "Running bionic test..."
+    docker build \
+      --tag test \
+      --file bionic.Dockerfile \
+      .
 
-  echo "All tests passed!"
+    docker run \
+      --rm \
+      --volume "$(dirname -- "${tarball_path}"):/tarball_path" \
+      test \
+      --tarballPath "/tarball_path/$(basename "${tarball_path}")" \
+      --expectedVersion "${expectedVersion}"
+  elif [[ $(basename -- "${tarball_path}") == *"jammy"* ]]; then
+    echo "Running jammy test..."
+    docker build \
+      --tag test \
+      --file jammy.Dockerfile \
+      .
+
+    docker run \
+      --rm \
+      --volume "$(dirname -- "${tarball_path}"):/tarball_path" \
+      test \
+      --tarballPath "/tarball_path/$(basename "${tarball_path}")" \
+      --expectedVersion "${expectedVersion}"
+  else
+    echo "bionic or jammy not found - skipping tests"
+  fi
 }
 
 main "$@"
