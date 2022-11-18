@@ -89,7 +89,7 @@ func testSimpleApp(t *testing.T, context spec.G, it spec.S) {
 			Expect(logs).To(ContainLines(
 				MatchRegexp(`    Installing cURL \d+\.\d+\.\d+`),
 				fmt.Sprintf("    Installation path: /layers/%s/curl", strings.ReplaceAll(settings.Buildpack.ID, "/", "_")),
-				MatchRegexp(`    Dependency URI\: https\:\/\/.*\.paketo\.io\/curl\/curl_\d+\.\d+\.\d+_linux.*_bionic_.*\.tgz`),
+				MatchRegexp(`    Dependency URI\: https\:\/\/artifacts\.paketo\.io\/curl\/curl_\d+\.\d+\.\d+_linux.*\.tgz`),
 				MatchRegexp(`      Completed in ([0-9]*(\.[0-9]*)?[a-z]+)+`),
 			))
 			Expect(logs).To(ContainLines(
