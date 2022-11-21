@@ -20,3 +20,10 @@ This builds the buildpack's source using GOOS=linux by default. You can supply a
 ## `buildpack.yml` Configurations
 
 There are no extra configurations for this buildpack based on `buildpack.yml`.
+
+## Compatibility
+
+This buildpack is currently only supported on the Paketo Bionic and Jammy stack
+distributions. A pre-compiled distribution of `curl` needed inside of the
+buildpack is provided for the Paketo stacks (i.e.  `io.buildpacks.stack.jammy`
+and `io.buildpacks.stacks.bionic`).
