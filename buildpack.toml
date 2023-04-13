@@ -43,7 +43,7 @@ api = "0.7"
     version = "7.88.1"
 
   [[metadata.dependency-constraints]]
-    constraint = "7.*"
+    constraint = "8.*"
     id = "curl"
     patches = 1
 
