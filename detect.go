@@ -24,7 +24,7 @@ func Detect(gemfileParser Parser) packit.DetectFunc {
 		}
 
 		if !hasPassenger {
-			return packit.DetectResult{}, packit.Fail
+			return packit.DetectResult{}, packit.Fail.WithMessage("passenger was not found the Gemfile")
 		}
 
 		return packit.DetectResult{
