@@ -77,7 +77,7 @@ function main() {
 
     rm upstream.tgz
 
-    ./configure --prefix="${build_dir}" --with-openssl
+    ./configure --prefix="${build_dir}" --with-openssl --without-libpsl
     make
     make install
 
