@@ -17,30 +17,30 @@ api = "0.7"
   pre-package = "./scripts/build.sh"
 
   [[metadata.dependencies]]
-    checksum = "sha256:bedb4a9ebc54f9eeb7e254a50f2901cf2942bf690eac002f6e1af71d04edcb14"
-    cpe = "cpe:2.3:a:haxx:curl:8.10.0:*:*:*:*:*:*:*"
+    checksum = "sha256:965b92c9d29c822547cd5fad22351c60e8d61be564c51128145b040f9c4a741c"
+    cpe = "cpe:2.3:a:haxx:curl:8.10.1:*:*:*:*:*:*:*"
     id = "curl"
     licenses = ["SSH-short", "curl"]
     name = "cURL"
-    purl = "pkg:generic/curl@8.10.0?checksum=58c9dcf73493ae9d181fd334b3b3987ff73124621565187ade237bff1064a716&download_url=https://curl.se/download/curl-8.10.0.tar.gz"
-    source = "https://curl.se/download/curl-8.10.0.tar.gz"
-    source-checksum = "sha256:58c9dcf73493ae9d181fd334b3b3987ff73124621565187ade237bff1064a716"
+    purl = "pkg:generic/curl@8.10.1?checksum=d15ebab765d793e2e96db090f0e172d127859d78ca6f6391d7eafecfd894bbc0&download_url=https://curl.se/download/curl-8.10.1.tar.gz"
+    source = "https://curl.se/download/curl-8.10.1.tar.gz"
+    source-checksum = "sha256:d15ebab765d793e2e96db090f0e172d127859d78ca6f6391d7eafecfd894bbc0"
     stacks = ["io.buildpacks.stacks.jammy"]
-    uri = "https://artifacts.paketo.io/curl/curl_8.10.0_linux_jammy_bedb4a9e.tgz"
-    version = "8.10.0"
+    uri = "https://artifacts.paketo.io/curl/curl_8.10.1_linux_jammy_965b92c9.tgz"
+    version = "8.10.1"
 
   [[metadata.dependencies]]
-    checksum = "sha256:93be907d084df9fcf72fa94043ea8ddd6b22db8e25203bc57ecfba6f6c395eff"
-    cpe = "cpe:2.3:a:haxx:curl:8.10.0:*:*:*:*:*:*:*"
+    checksum = "sha256:f34c0c3ee87fee62f32276a26309c22d2841c34a11a5820a05708a0311882c02"
+    cpe = "cpe:2.3:a:haxx:curl:8.10.1:*:*:*:*:*:*:*"
     id = "curl"
     licenses = ["SSH-short", "curl"]
     name = "cURL"
-    purl = "pkg:generic/curl@8.10.0?checksum=58c9dcf73493ae9d181fd334b3b3987ff73124621565187ade237bff1064a716&download_url=https://curl.se/download/curl-8.10.0.tar.gz"
-    source = "https://curl.se/download/curl-8.10.0.tar.gz"
-    source-checksum = "sha256:58c9dcf73493ae9d181fd334b3b3987ff73124621565187ade237bff1064a716"
+    purl = "pkg:generic/curl@8.10.1?checksum=d15ebab765d793e2e96db090f0e172d127859d78ca6f6391d7eafecfd894bbc0&download_url=https://curl.se/download/curl-8.10.1.tar.gz"
+    source = "https://curl.se/download/curl-8.10.1.tar.gz"
+    source-checksum = "sha256:d15ebab765d793e2e96db090f0e172d127859d78ca6f6391d7eafecfd894bbc0"
     stacks = ["io.buildpacks.stacks.bionic"]
-    uri = "https://artifacts.paketo.io/curl/curl_8.10.0_linux_bionic_93be907d.tgz"
-    version = "8.10.0"
+    uri = "https://artifacts.paketo.io/curl/curl_8.10.1_linux_bionic_f34c0c3e.tgz"
+    version = "8.10.1"
 
   [[metadata.dependency-constraints]]
     constraint = "8.*"
