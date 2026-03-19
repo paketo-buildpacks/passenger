@@ -23,10 +23,7 @@ type StackAndTargetPair struct {
 	target string
 }
 
-var supportedStacks = []StackAndTargetPair{
-	{stacks: []string{"io.buildpacks.stacks.jammy"}, target: "jammy"},
-	{stacks: []string{"io.buildpacks.stacks.bionic"}, target: "bionic"},
-}
+var supportedStacks []StackAndTargetPair
 
 const curlDownloadIndexURL = "https://curl.se/download/"
 
@@ -96,10 +93,6 @@ func getAsString(url string) (string, error) {
 	response, err := http.DefaultClient.Get(url)
 	if err != nil {
 		return "", fmt.Errorf("could not get project metadata: %w", err)
-	}
-
-	if err != nil {
-		return "", err
 	}
 	defer response.Body.Close()
 
@@ -173,6 +166,49 @@ func getAllVersionsFromCurlDownloadIndex() (versionology.VersionFetcherArray, er
 	return versionology.NewSimpleVersionFetcherArray(versions...)
 }
 
+func deriveSupportedStacks(buildpackTomlPath string) ([]StackAndTargetPair, error) {
+	config, err := cargo.NewBuildpackParser().Parse(buildpackTomlPath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse buildpack.toml for stacks: %w", err)
+	}
+
+	pairs := make([]StackAndTargetPair, 0, len(config.Stacks))
+	for _, stack := range config.Stacks {
+		if stack.ID == "" || stack.ID == "*" {
+			continue
+		}
+
+		parts := strings.Split(stack.ID, ".")
+		target := parts[len(parts)-1]
+		if target == "" {
+			continue
+		}
+
+		pairs = append(pairs, StackAndTargetPair{
+			stacks: []string{stack.ID},
+			target: target,
+		})
+	}
+
+	if len(pairs) == 0 {
+		return nil, errors.New("no supported stacks found in buildpack.toml")
+	}
+
+	return pairs, nil
+}
+
 func main() {
+	buildpackTomlPath, output := retrieve.FetchArgs()
+
+	var err error
+	supportedStacks, err = deriveSupportedStacks(buildpackTomlPath)
+	if err != nil {
+		panic(err)
+	}
+
+	retrieve.FetchArgs = func() (string, string) {
+		return buildpackTomlPath, output
+	}
+
 	retrieve.NewMetadata("curl", getAllVersionsFromCurlDownloadIndex, generateMetadata)
 }
