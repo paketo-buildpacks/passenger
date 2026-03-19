@@ -7,10 +7,10 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 
 	"github.com/joshuatcasey/collections"
-	"github.com/joshuatcasey/libdependency/github"
 	"github.com/joshuatcasey/libdependency/retrieve"
 	"github.com/joshuatcasey/libdependency/upstream"
 	"github.com/joshuatcasey/libdependency/versionology"
@@ -27,6 +27,8 @@ var supportedStacks = []StackAndTargetPair{
 	{stacks: []string{"io.buildpacks.stacks.jammy"}, target: "jammy"},
 	{stacks: []string{"io.buildpacks.stacks.bionic"}, target: "bionic"},
 }
+
+const curlDownloadIndexURL = "https://curl.se/download/"
 
 func generateMetadata(versionFetcher versionology.VersionFetcher) ([]versionology.Dependency, error) {
 	version := versionFetcher.Version().String()
@@ -139,8 +141,38 @@ func downloadToFile(url string) (string, error) {
 	return tempFilePath, nil
 }
 
-func main() {
-	getAllVersions := github.GetAllVersions(os.Getenv("GIT_TOKEN"), "curl", "curl")
+func getAllVersionsFromCurlDownloadIndex() (versionology.VersionFetcherArray, error) {
+	body, err := getAsString(curlDownloadIndexURL)
+	if err != nil {
+		return versionology.NewVersionFetcherArray(), fmt.Errorf("failed to fetch curl download index: %w", err)
+	}
 
-	retrieve.NewMetadata("curl", getAllVersions, generateMetadata)
+	versionRegex := regexp.MustCompile(`curl-([0-9]+\.[0-9]+\.[0-9]+)\.tar\.gz`)
+	matches := versionRegex.FindAllStringSubmatch(body, -1)
+
+	if len(matches) == 0 {
+		return versionology.NewVersionFetcherArray(), fmt.Errorf("no curl versions found in %s", curlDownloadIndexURL)
+	}
+
+	seen := map[string]struct{}{}
+	versions := make([]string, 0, len(matches))
+	for _, match := range matches {
+		if len(match) < 2 {
+			continue
+		}
+
+		version := match[1]
+		if _, ok := seen[version]; ok {
+			continue
+		}
+
+		seen[version] = struct{}{}
+		versions = append(versions, version)
+	}
+
+	return versionology.NewSimpleVersionFetcherArray(versions...)
+}
+
+func main() {
+	retrieve.NewMetadata("curl", getAllVersionsFromCurlDownloadIndex, generateMetadata)
 }
