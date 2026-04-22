@@ -1,16 +1,17 @@
 package main
 
 import (
+	"crypto/sha256"
 	"errors"
 	"fmt"
 	"io"
 	"net/http"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 
 	"github.com/joshuatcasey/collections"
-	"github.com/joshuatcasey/libdependency/github"
 	"github.com/joshuatcasey/libdependency/retrieve"
 	"github.com/joshuatcasey/libdependency/upstream"
 	"github.com/joshuatcasey/libdependency/versionology"
@@ -23,10 +24,10 @@ type StackAndTargetPair struct {
 	target string
 }
 
-var supportedStacks = []StackAndTargetPair{
-	{stacks: []string{"io.buildpacks.stacks.jammy"}, target: "jammy"},
-	{stacks: []string{"io.buildpacks.stacks.bionic"}, target: "bionic"},
-}
+var supportedStacks []StackAndTargetPair
+
+const curlDownloadIndexURL = "https://curl.se/download/"
+const paketoBuildpacksCIUserAgent = "Paketo Buildpacks CI"
 
 func generateMetadata(versionFetcher versionology.VersionFetcher) ([]versionology.Dependency, error) {
 	version := versionFetcher.Version().String()
@@ -49,7 +50,7 @@ func generateMetadata(versionFetcher versionology.VersionFetcher) ([]versionolog
 		return nil, err
 	}
 
-	sourceSHA256, err := upstream.GetSHA256OfRemoteFile(sourceURL)
+	sourceSHA256, err := getSHA256OfFile(curlTarballPath)
 	if err != nil {
 		return nil, err
 	}
@@ -91,15 +92,14 @@ func verifyASC(signature, target, pgpKey string) error {
 }
 
 func getAsString(url string) (string, error) {
-	response, err := http.DefaultClient.Get(url)
+	response, err := doRequest(url)
 	if err != nil {
 		return "", fmt.Errorf("could not get project metadata: %w", err)
 	}
-
-	if err != nil {
-		return "", err
-	}
 	defer response.Body.Close()
+	if response.StatusCode != http.StatusOK {
+		return "", fmt.Errorf("could not get project metadata from %s: status code %d", url, response.StatusCode)
+	}
 
 	body, err := io.ReadAll(response.Body)
 	if err != nil {
@@ -110,15 +110,15 @@ func getAsString(url string) (string, error) {
 }
 
 func downloadToFile(url string) (string, error) {
-	resp, err := http.Get(url)
+	resp, err := doRequest(url)
 	if err != nil {
 		return "", fmt.Errorf("failed to query url: %w", err)
 	}
+	defer resp.Body.Close()
+
 	if resp.StatusCode != http.StatusOK {
 		return "", fmt.Errorf("failed to query url %s with: status code %d", url, resp.StatusCode)
 	}
-
-	defer resp.Body.Close()
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
@@ -139,8 +139,107 @@ func downloadToFile(url string) (string, error) {
 	return tempFilePath, nil
 }
 
-func main() {
-	getAllVersions := github.GetAllVersions(os.Getenv("GIT_TOKEN"), "curl", "curl")
+func doRequest(url string) (*http.Response, error) {
+	req, err := http.NewRequest(http.MethodGet, url, nil)
+	if err != nil {
+		return nil, err
+	}
 
-	retrieve.NewMetadata("curl", getAllVersions, generateMetadata)
+	req.Header.Set("User-Agent", paketoBuildpacksCIUserAgent)
+
+	return http.DefaultClient.Do(req)
+}
+
+func getSHA256OfFile(path string) (string, error) {
+	file, err := os.Open(path)
+	if err != nil {
+		return "", fmt.Errorf("could not open file for sha256: %w", err)
+	}
+	defer file.Close()
+
+	hash := sha256.New()
+	if _, err := io.Copy(hash, file); err != nil {
+		return "", fmt.Errorf("could not read file for sha256: %w", err)
+	}
+
+	return fmt.Sprintf("%x", hash.Sum(nil)), nil
+}
+
+func getAllVersionsFromCurlDownloadIndex() (versionology.VersionFetcherArray, error) {
+	body, err := getAsString(curlDownloadIndexURL)
+	if err != nil {
+		return versionology.NewVersionFetcherArray(), fmt.Errorf("failed to fetch curl download index: %w", err)
+	}
+
+	versionRegex := regexp.MustCompile(`curl-([0-9]+\.[0-9]+\.[0-9]+)\.tar\.gz`)
+	matches := versionRegex.FindAllStringSubmatch(body, -1)
+
+	if len(matches) == 0 {
+		return versionology.NewVersionFetcherArray(), fmt.Errorf("no curl versions found in %s", curlDownloadIndexURL)
+	}
+
+	seen := map[string]struct{}{}
+	versions := make([]string, 0, len(matches))
+	for _, match := range matches {
+		if len(match) < 2 {
+			continue
+		}
+
+		version := match[1]
+		if _, ok := seen[version]; ok {
+			continue
+		}
+
+		seen[version] = struct{}{}
+		versions = append(versions, version)
+	}
+
+	return versionology.NewSimpleVersionFetcherArray(versions...)
+}
+
+func deriveSupportedStacks(buildpackTomlPath string) ([]StackAndTargetPair, error) {
+	config, err := cargo.NewBuildpackParser().Parse(buildpackTomlPath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse buildpack.toml for stacks: %w", err)
+	}
+
+	pairs := make([]StackAndTargetPair, 0, len(config.Stacks))
+	for _, stack := range config.Stacks {
+		if stack.ID == "" || stack.ID == "*" {
+			continue
+		}
+
+		parts := strings.Split(stack.ID, ".")
+		target := parts[len(parts)-1]
+		if target == "" {
+			continue
+		}
+
+		pairs = append(pairs, StackAndTargetPair{
+			stacks: []string{stack.ID},
+			target: target,
+		})
+	}
+
+	if len(pairs) == 0 {
+		return nil, errors.New("no supported stacks found in buildpack.toml")
+	}
+
+	return pairs, nil
+}
+
+func main() {
+	buildpackTomlPath, output := retrieve.FetchArgs()
+
+	var err error
+	supportedStacks, err = deriveSupportedStacks(buildpackTomlPath)
+	if err != nil {
+		panic(err)
+	}
+
+	retrieve.FetchArgs = func() (string, string) {
+		return buildpackTomlPath, output
+	}
+
+	retrieve.NewMetadata("curl", getAllVersionsFromCurlDownloadIndex, generateMetadata)
 }
