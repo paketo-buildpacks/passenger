@@ -22,6 +22,8 @@ import (
 type StackAndTargetPair struct {
 	stacks []string
 	target string
+	os     string
+	arch   string
 }
 
 var supportedStacks []StackAndTargetPair
@@ -68,6 +70,8 @@ func generateMetadata(versionFetcher versionology.VersionFetcher) ([]versionolog
 
 	return collections.TransformFuncWithError(supportedStacks, func(pair StackAndTargetPair) (versionology.Dependency, error) {
 		configMetadataDependency.Stacks = pair.stacks
+		configMetadataDependency.OS = pair.os
+		configMetadataDependency.Arch = pair.arch
 		return versionology.NewDependency(configMetadataDependency, pair.target)
 	})
 }
@@ -203,7 +207,7 @@ func deriveSupportedStacks(buildpackTomlPath string) ([]StackAndTargetPair, erro
 		return nil, fmt.Errorf("failed to parse buildpack.toml for stacks: %w", err)
 	}
 
-	pairs := make([]StackAndTargetPair, 0, len(config.Stacks))
+	pairs := make([]StackAndTargetPair, 0, len(config.Stacks)*len(config.Targets))
 	for _, stack := range config.Stacks {
 		if stack.ID == "" || stack.ID == "*" {
 			continue
@@ -215,10 +219,22 @@ func deriveSupportedStacks(buildpackTomlPath string) ([]StackAndTargetPair, erro
 			continue
 		}
 
-		pairs = append(pairs, StackAndTargetPair{
-			stacks: []string{stack.ID},
-			target: target,
-		})
+		if len(config.Targets) == 0 {
+			pairs = append(pairs, StackAndTargetPair{
+				stacks: []string{stack.ID},
+				target: target,
+			})
+			continue
+		}
+
+		for _, cfgTarget := range config.Targets {
+			pairs = append(pairs, StackAndTargetPair{
+				stacks: []string{stack.ID},
+				target: target,
+				os:     cfgTarget.OS,
+				arch:   cfgTarget.Arch,
+			})
+		}
 	}
 
 	if len(pairs) == 0 {
