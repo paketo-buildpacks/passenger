@@ -45,20 +45,7 @@ main() {
   echo "Outside image: tarball_path=${tarball_path}"
   echo "Outside image: expectedVersion=${expectedVersion}"
 
-  if [[ $(basename "${tarball_path}") == *"bionic"* ]]; then
-    echo "Running bionic test..."
-    docker build \
-      --tag test \
-      --file bionic.Dockerfile \
-      .
-
-    docker run \
-      --rm \
-      --volume "$(dirname -- "${tarball_path}"):/tarball_path" \
-      test \
-      --tarballPath "/tarball_path/$(basename "${tarball_path}")" \
-      --expectedVersion "${expectedVersion}"
-  elif [[ $(basename -- "${tarball_path}") == *"jammy"* ]]; then
+  if [[ $(basename -- "${tarball_path}") == *"jammy"* ]]; then
     echo "Running jammy test..."
     docker build \
       --tag test \
@@ -71,8 +58,21 @@ main() {
       test \
       --tarballPath "/tarball_path/$(basename "${tarball_path}")" \
       --expectedVersion "${expectedVersion}"
+  elif [[ $(basename -- "${tarball_path}") == *"noble"* ]]; then
+    echo "Running noble test..."
+    docker build \
+      --tag test \
+      --file noble.Dockerfile \
+      .
+
+    docker run \
+      --rm \
+      --volume "$(dirname -- "${tarball_path}"):/tarball_path" \
+      test \
+      --tarballPath "/tarball_path/$(basename "${tarball_path}")" \
+      --expectedVersion "${expectedVersion}"
   else
-    echo "bionic or jammy not found - skipping tests"
+    echo "jammy or noble not found - skipping tests"
   fi
 }
 
