@@ -16,6 +16,96 @@ api = "0.7"
   include-files = ["buildpack.toml", "linux/amd64/bin/build", "linux/amd64/bin/detect", "linux/amd64/bin/run", "linux/arm64/bin/build", "linux/arm64/bin/detect", "linux/arm64/bin/run"]
   pre-package = "./scripts/build.sh --target linux/amd64 --target linux/arm64"
 
+  [[metadata.dependencies]]
+    arch = "amd64"
+    checksum = "sha256:b0d663673d4f7c8219646def8101eca88d52bade5c5d134f2ae511fd4231063e"
+    cpe = "cpe:2.3:a:haxx:curl:8.21.0:*:*:*:*:*:*:*"
+    id = "curl"
+    licenses = ["curl"]
+    name = "cURL"
+    os = "linux"
+    purl = "pkg:generic/curl@8.21.0?checksum=d9b327997999045a24cda50f3983e69e51c516bd8be6ef9842fc7f99135e33bb&download_url=https://curl.se/download/curl-8.21.0.tar.gz"
+    source = "https://curl.se/download/curl-8.21.0.tar.gz"
+    source-checksum = "sha256:d9b327997999045a24cda50f3983e69e51c516bd8be6ef9842fc7f99135e33bb"
+    stacks = ["io.buildpacks.stacks.jammy"]
+    uri = "https://artifacts.paketo.io/curl/curl_8.21.0_linux_jammy_b0d66367.tgz"
+    version = "8.21.0"
+
+  [[metadata.dependencies]]
+    arch = "arm64"
+    checksum = "sha256:c754dee0a64b8b9994eeaba535bf476acd024063e9d15e96c568bf5f792e2c54"
+    cpe = "cpe:2.3:a:haxx:curl:8.21.0:*:*:*:*:*:*:*"
+    id = "curl"
+    licenses = ["curl"]
+    name = "cURL"
+    os = "linux"
+    purl = "pkg:generic/curl@8.21.0?checksum=d9b327997999045a24cda50f3983e69e51c516bd8be6ef9842fc7f99135e33bb&download_url=https://curl.se/download/curl-8.21.0.tar.gz"
+    source = "https://curl.se/download/curl-8.21.0.tar.gz"
+    source-checksum = "sha256:d9b327997999045a24cda50f3983e69e51c516bd8be6ef9842fc7f99135e33bb"
+    stacks = ["io.buildpacks.stacks.jammy"]
+    uri = "https://artifacts.paketo.io/curl/curl_8.21.0_linux_jammy_c754dee0.tgz"
+    version = "8.21.0"
+
+  [[metadata.dependencies]]
+    arch = "amd64"
+    checksum = "sha256:df43225630560eeca00345d88473402b65411d19acae30e42d485c180aa6fe70"
+    cpe = "cpe:2.3:a:haxx:curl:8.21.0:*:*:*:*:*:*:*"
+    id = "curl"
+    licenses = ["curl"]
+    name = "cURL"
+    os = "linux"
+    purl = "pkg:generic/curl@8.21.0?checksum=d9b327997999045a24cda50f3983e69e51c516bd8be6ef9842fc7f99135e33bb&download_url=https://curl.se/download/curl-8.21.0.tar.gz"
+    source = "https://curl.se/download/curl-8.21.0.tar.gz"
+    source-checksum = "sha256:d9b327997999045a24cda50f3983e69e51c516bd8be6ef9842fc7f99135e33bb"
+    stacks = ["io.buildpacks.stacks.noble"]
+    uri = "https://artifacts.paketo.io/curl/curl_8.21.0_linux_noble_df432256.tgz"
+    version = "8.21.0"
+
+  [[metadata.dependencies]]
+    arch = "arm64"
+    checksum = "sha256:2faa687e6f7d7f64e7606ae207fc0d7b8bd1ea3494933de1b3f56d3ea8ff2f82"
+    cpe = "cpe:2.3:a:haxx:curl:8.21.0:*:*:*:*:*:*:*"
+    id = "curl"
+    licenses = ["curl"]
+    name = "cURL"
+    os = "linux"
+    purl = "pkg:generic/curl@8.21.0?checksum=d9b327997999045a24cda50f3983e69e51c516bd8be6ef9842fc7f99135e33bb&download_url=https://curl.se/download/curl-8.21.0.tar.gz"
+    source = "https://curl.se/download/curl-8.21.0.tar.gz"
+    source-checksum = "sha256:d9b327997999045a24cda50f3983e69e51c516bd8be6ef9842fc7f99135e33bb"
+    stacks = ["io.buildpacks.stacks.noble"]
+    uri = "https://artifacts.paketo.io/curl/curl_8.21.0_linux_noble_2faa687e.tgz"
+    version = "8.21.0"
+
+  [[metadata.dependencies]]
+    arch = "amd64"
+    checksum = "sha256:bf56aca62c31fe368dda55ac8363a937833956829aca657fa32afd9df236040f"
+    cpe = "cpe:2.3:a:haxx:curl:8.21.0:*:*:*:*:*:*:*"
+    id = "curl"
+    licenses = ["curl"]
+    name = "cURL"
+    os = "linux"
+    purl = "pkg:generic/curl@8.21.0?checksum=d9b327997999045a24cda50f3983e69e51c516bd8be6ef9842fc7f99135e33bb&download_url=https://curl.se/download/curl-8.21.0.tar.gz"
+    source = "https://curl.se/download/curl-8.21.0.tar.gz"
+    source-checksum = "sha256:d9b327997999045a24cda50f3983e69e51c516bd8be6ef9842fc7f99135e33bb"
+    stacks = ["io.buildpacks.stacks.resolute"]
+    uri = "https://artifacts.paketo.io/curl/curl_8.21.0_linux_resolute_bf56aca6.tgz"
+    version = "8.21.0"
+
+  [[metadata.dependencies]]
+    arch = "arm64"
+    checksum = "sha256:e1782f486b8ceb27cc5ef7688048f82a657571dbf24a814aa0247809924f2880"
+    cpe = "cpe:2.3:a:haxx:curl:8.21.0:*:*:*:*:*:*:*"
+    id = "curl"
+    licenses = ["curl"]
+    name = "cURL"
+    os = "linux"
+    purl = "pkg:generic/curl@8.21.0?checksum=d9b327997999045a24cda50f3983e69e51c516bd8be6ef9842fc7f99135e33bb&download_url=https://curl.se/download/curl-8.21.0.tar.gz"
+    source = "https://curl.se/download/curl-8.21.0.tar.gz"
+    source-checksum = "sha256:d9b327997999045a24cda50f3983e69e51c516bd8be6ef9842fc7f99135e33bb"
+    stacks = ["io.buildpacks.stacks.resolute"]
+    uri = "https://artifacts.paketo.io/curl/curl_8.21.0_linux_resolute_e1782f48.tgz"
+    version = "8.21.0"
+
   [[metadata.dependency-constraints]]
     constraint = "8.*"
     id = "curl"
