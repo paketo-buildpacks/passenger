@@ -6,7 +6,7 @@ require (
 	github.com/joshuatcasey/collections v0.5.0
 	github.com/joshuatcasey/libdependency v0.25.0
 	github.com/paketo-buildpacks/packit/v2 v2.25.7
-	golang.org/x/crypto v0.55.0
+	golang.org/x/crypto v0.56.0
 )
 
 require (
