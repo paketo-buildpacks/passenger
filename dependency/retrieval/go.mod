@@ -42,7 +42,7 @@ require (
 	github.com/ulikunitz/xz v0.5.17 // indirect
 	github.com/xanzy/ssh-agent v0.3.3 // indirect
 	golang.org/x/exp v0.0.0-20260410095643-746e56fc9e2f // indirect
-	golang.org/x/net v0.59.0 // indirect
+	golang.org/x/net v0.60.0 // indirect
 	golang.org/x/sys v0.49.0 // indirect
 	golang.org/x/text v0.42.0 // indirect
 	gonum.org/v1/gonum v0.17.0 // indirect
