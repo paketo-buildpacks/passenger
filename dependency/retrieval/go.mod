@@ -5,7 +5,7 @@ go 1.27.2
 require (
 	github.com/joshuatcasey/collections v0.5.0
 	github.com/joshuatcasey/libdependency v0.25.0
-	github.com/paketo-buildpacks/packit/v2 v2.25.7
+	github.com/paketo-buildpacks/packit/v2 v2.25.8
 	golang.org/x/crypto v0.58.0
 )
 
