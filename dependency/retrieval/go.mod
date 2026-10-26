@@ -1,6 +1,6 @@
 module github.com/paketo-buildpacks/poetry/retrieval
 
-go 1.27.2
+go 1.27.3
 
 require (
 	github.com/joshuatcasey/collections v0.5.0
